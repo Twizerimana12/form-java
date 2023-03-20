@@ -19,6 +19,7 @@
         },
     password:{
             type:String,
+            
         },
        
     }
