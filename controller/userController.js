@@ -2,6 +2,7 @@
 const User=require( "../models/User");
 
 
+
 class userController{
     static async create(req, res) {
         try {
@@ -50,5 +51,30 @@ class userController{
           return res.status(500).json({error:error.message})
       }
   }
+  static async update(req,res){
+       
+    try {
+      const id= req.params._id
+        const user =   await User.findOneAndUpdate(id)
+        res.status(200).json({ message: 'User updated', data: user});
+    } catch (error) {
+
+        return res.status(500).json({error:error.message})
+    }
+}
+static async login(req, res) {
+  try {
+    const user = await User.findOne({email: req.body.email })
+    if (!user) return res.status(404).json({ error: "User not registered" });
+    const isMatch = await compare(req.body.password, user.password)
+    if (!isMatch) return res.status(401).json({ error: "Invalid email or password" })
+    
+    const accessToken = await sign({ id: user._id, email: user.email, role: 'user' })
+    user.password = undefined
+    return res.status(200).json({ message: 'Logged in successfully', data: user,  token: accessToken });
+  } catch (error) {
+    return res.status(500).json({ error: error.message })
+  }
+}
 }
 module.exports = userController
