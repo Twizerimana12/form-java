@@ -1,7 +1,7 @@
 
 const User=require( "../models/User");
-
-
+const bcrypt=require("bcrypt")
+const {sign}=require("../helper/jwt")
 
 class userController{
     static async create(req, res) {
@@ -9,9 +9,9 @@ class userController{
             console.log(req.body)
           const { firstname, lastname,email, password } = req.body;
           
-        //   const salt = await bcrypt.genSalt(10);
-        //   const hashedPassword = await bcrypt.hash(password, salt)
-          const user = await User.create({ firstname,lastname, email, password });
+         const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(password, salt)
+          const user = await User.create({ firstname,lastname, email,  password: hashedPassword });
           //user.password = null;
           //const accessToken = sign({ id: user._id, username: user.username, role: 'user' })
           res.status(200).json({ message: 'User created', data: user});
@@ -66,10 +66,10 @@ static async login(req, res) {
   try {
     const user = await User.findOne({email: req.body.email })
     if (!user) return res.status(404).json({ error: "User not registered" });
-    const isMatch = await compare(req.body.password, user.password)
+    const isMatch = await bcrypt.compare(req.body.password, user.password)
     if (!isMatch) return res.status(401).json({ error: "Invalid email or password" })
     
-    const accessToken = await sign({ id: user._id, email: user.email, role: 'user' })
+    const accessToken = await sign({ id: user._id, email: user.email })
     user.password = undefined
     return res.status(200).json({ message: 'Logged in successfully', data: user,  token: accessToken });
   } catch (error) {
